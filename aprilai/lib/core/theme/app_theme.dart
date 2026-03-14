@@ -14,6 +14,11 @@ class AppTheme {
   static const Color _generalTeal = Color(0xFF00897B);
   static const Color _generalBg = Color(0xFFF5F5F5);
 
+  // ── Font family helpers (avoids broken GoogleFonts.*TextTheme() const map) ─
+  static String get _interFamily => GoogleFonts.inter().fontFamily!;
+  static String get _jetbrainsFamily => GoogleFonts.jetBrainsMono().fontFamily!;
+  static String get _nunitoFamily => GoogleFonts.nunito().fontFamily!;
+
   // ── Executive Theme (Material 3, Light, medium density) ───────────────────
   static ThemeData get executive {
     final colorScheme = ColorScheme.fromSeed(
@@ -21,11 +26,13 @@ class AppTheme {
       secondary: _executiveGold,
       brightness: Brightness.light,
     );
+    final textTheme = _buildTextTheme(_interFamily, Brightness.light);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
-      textTheme: _executiveTextTheme,
-      cardTheme: CardTheme(
+      fontFamily: _interFamily,
+      textTheme: textTheme,
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         color: Colors.white,
@@ -36,7 +43,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 1,
         centerTitle: false,
-        titleTextStyle: _executiveTextTheme.titleLarge?.copyWith(
+        titleTextStyle: textTheme.titleLarge?.copyWith(
           color: colorScheme.onSurface,
           fontWeight: FontWeight.w600,
         ),
@@ -67,12 +74,14 @@ class AppTheme {
       surfaceContainerHighest: const Color(0xFF161B22),
       outline: const Color(0xFF30363D),
     );
+    final textTheme = _buildTextTheme(_jetbrainsFamily, Brightness.dark);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: _technicalBg,
-      textTheme: _technicalTextTheme,
-      cardTheme: CardTheme(
+      fontFamily: _jetbrainsFamily,
+      textTheme: textTheme,
+      cardTheme: CardThemeData(
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(6),
@@ -86,9 +95,9 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: false,
-        titleTextStyle: _technicalTextTheme.titleLarge?.copyWith(
+        titleTextStyle: textTheme.titleLarge?.copyWith(
           color: const Color(0xFFE6EDF3),
-          fontFamily: 'JetBrains Mono',
+          fontFamily: _jetbrainsFamily,
         ),
         iconTheme: const IconThemeData(color: Color(0xFF8B949E)),
       ),
@@ -106,7 +115,7 @@ class AppTheme {
         style: FilledButton.styleFrom(
           minimumSize: const Size(0, 36),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(4)),
-          textStyle: GoogleFonts.jetBrainsMono(fontSize: 13),
+          textStyle: TextStyle(fontFamily: _jetbrainsFamily, fontSize: 13),
         ),
       ),
       inputDecorationTheme: InputDecorationTheme(
@@ -136,12 +145,15 @@ class AppTheme {
     ).copyWith(
       surface: _generalBg,
     );
+    final textTheme = _buildTextTheme(_nunitoFamily, Brightness.light,
+        scale: 1.15);
     return ThemeData(
       useMaterial3: true,
       colorScheme: colorScheme,
       scaffoldBackgroundColor: _generalBg,
-      textTheme: _generalTextTheme,
-      cardTheme: CardTheme(
+      fontFamily: _nunitoFamily,
+      textTheme: textTheme,
+      cardTheme: CardThemeData(
         elevation: 2,
         shadowColor: Colors.black26,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -152,7 +164,7 @@ class AppTheme {
         backgroundColor: colorScheme.primary,
         elevation: 0,
         centerTitle: true,
-        titleTextStyle: _generalTextTheme.titleLarge?.copyWith(
+        titleTextStyle: textTheme.titleLarge?.copyWith(
           color: Colors.white,
           fontWeight: FontWeight.w700,
           fontSize: 22,
@@ -165,73 +177,61 @@ class AppTheme {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           backgroundColor: colorScheme.primary,
           foregroundColor: Colors.white,
-          textStyle: _generalTextTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       filledButtonTheme: FilledButtonThemeData(
         style: FilledButton.styleFrom(
           minimumSize: const Size(double.infinity, 64),
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          textStyle: _generalTextTheme.titleMedium?.copyWith(
-            fontWeight: FontWeight.w700,
-          ),
+          textStyle: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700),
         ),
       ),
       navigationBarTheme: NavigationBarThemeData(
         height: 72,
-        labelTextStyle: WidgetStateProperty.resolveWith((states) {
-          return _generalTextTheme.labelLarge?.copyWith(
-            fontWeight: FontWeight.w600,
-          );
-        }),
+        labelTextStyle: WidgetStateProperty.resolveWith((_) =>
+            textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w600)),
       ),
     );
   }
 
-  // ── Text Themes ───────────────────────────────────────────────────────────
-  static TextTheme get _executiveTextTheme => GoogleFonts.interTextTheme(
-        const TextTheme(
-          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.w300, letterSpacing: -1),
-          headlineLarge: TextStyle(fontSize: 24, fontWeight: FontWeight.w600),
-          headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600),
-          titleLarge: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
-          titleMedium: TextStyle(fontSize: 15, fontWeight: FontWeight.w500),
-          bodyLarge: TextStyle(fontSize: 14, height: 1.5),
-          bodyMedium: TextStyle(fontSize: 13, height: 1.5),
-          labelLarge: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, letterSpacing: 0.3),
-        ),
-      );
+  // ── Text theme builder (avoids GoogleFonts.*TextTheme const map issue) ────
+  static TextTheme _buildTextTheme(
+    String fontFamily,
+    Brightness brightness, {
+    double scale = 1.0,
+  }) {
+    final base = brightness == Brightness.dark
+        ? ThemeData.dark().textTheme
+        : ThemeData.light().textTheme;
 
-  static TextTheme get _technicalTextTheme {
-    const mono = TextStyle(fontFamily: 'monospace');
-    return GoogleFonts.jetBrainsMonoTextTheme(
-      TextTheme(
-        displayLarge: mono.copyWith(fontSize: 28, fontWeight: FontWeight.w700),
-        headlineLarge: mono.copyWith(fontSize: 20, fontWeight: FontWeight.w700),
-        headlineMedium: mono.copyWith(fontSize: 16, fontWeight: FontWeight.w600),
-        titleLarge: mono.copyWith(fontSize: 14, fontWeight: FontWeight.w600),
-        titleMedium: mono.copyWith(fontSize: 13),
-        bodyLarge: mono.copyWith(fontSize: 13, height: 1.6),
-        bodyMedium: mono.copyWith(fontSize: 12, height: 1.6),
-        labelLarge: mono.copyWith(fontSize: 12, fontWeight: FontWeight.w600, letterSpacing: 0.5),
-      ),
+    TextStyle s(double size, FontWeight weight, {double? height, double? spacing}) =>
+        TextStyle(
+          fontFamily: fontFamily,
+          fontSize: size * scale,
+          fontWeight: weight,
+          height: height,
+          letterSpacing: spacing,
+        );
+
+    return base.copyWith(
+      displayLarge: s(32, FontWeight.w300, spacing: -1),
+      displayMedium: s(28, FontWeight.w300),
+      displaySmall: s(24, FontWeight.w400),
+      headlineLarge: s(24, FontWeight.w600),
+      headlineMedium: s(20, FontWeight.w600),
+      headlineSmall: s(18, FontWeight.w600),
+      titleLarge: s(18, FontWeight.w500),
+      titleMedium: s(15, FontWeight.w500),
+      titleSmall: s(13, FontWeight.w500),
+      bodyLarge: s(14, FontWeight.w400, height: 1.5),
+      bodyMedium: s(13, FontWeight.w400, height: 1.5),
+      bodySmall: s(12, FontWeight.w400, height: 1.5),
+      labelLarge: s(13, FontWeight.w600, spacing: 0.3),
+      labelMedium: s(12, FontWeight.w500),
+      labelSmall: s(11, FontWeight.w500),
     );
   }
-
-  static TextTheme get _generalTextTheme => GoogleFonts.nunitoTextTheme(
-        const TextTheme(
-          displayLarge: TextStyle(fontSize: 36, fontWeight: FontWeight.w800),
-          headlineLarge: TextStyle(fontSize: 28, fontWeight: FontWeight.w800),
-          headlineMedium: TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
-          titleLarge: TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-          titleMedium: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-          bodyLarge: TextStyle(fontSize: 18, height: 1.6),
-          bodyMedium: TextStyle(fontSize: 16, height: 1.6),
-          labelLarge: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
-        ),
-      );
 
   // ── Factory accessor ──────────────────────────────────────────────────────
   static ThemeData forRole(UserRole role) {
@@ -245,7 +245,6 @@ class AppTheme {
     }
   }
 
-  static Brightness brightnessForRole(UserRole role) {
-    return role == UserRole.technical ? Brightness.dark : Brightness.light;
-  }
+  static Brightness brightnessForRole(UserRole role) =>
+      role == UserRole.technical ? Brightness.dark : Brightness.light;
 }
