@@ -1,0 +1,302 @@
+:root {
+  color-scheme: light;
+  font-family:
+    Inter,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    sans-serif;
+  line-height: 1.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f6f8fb;
+  color: #1f2937;
+}
+
+.page {
+  margin: 0 auto;
+  max-width: 1200px;
+  padding: 24px;
+}
+
+header {
+  margin-bottom: 20px;
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 8px;
+}
+
+p {
+  margin: 0 0 8px;
+}
+
+.card {
+  background: #fff;
+  border: 1px solid #d8dce5;
+  border-radius: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+}
+
+.setup-row {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.upload {
+  display: inline-flex;
+  flex-direction: column;
+  font-weight: 600;
+  gap: 8px;
+}
+
+.paste-grid {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr auto;
+  margin-bottom: 10px;
+}
+
+textarea,
+input,
+select,
+button {
+  font: inherit;
+}
+
+textarea,
+input[type="search"],
+input[type="text"],
+select {
+  border: 1px solid #c5cbd6;
+  border-radius: 8px;
+  padding: 8px 10px;
+  width: 100%;
+}
+
+button {
+  background: #f3f4f8;
+  border: 1px solid #ccd2df;
+  border-radius: 8px;
+  cursor: pointer;
+  padding: 7px 10px;
+}
+
+button.primary {
+  background: #1d4ed8;
+  border-color: #1e40af;
+  color: #fff;
+  margin-top: 10px;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.file-list {
+  margin-top: 12px;
+}
+
+.file-row {
+  align-items: flex-start;
+  border-top: 1px solid #e4e8ef;
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+}
+
+.status {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  margin-left: 8px;
+  padding: 2px 8px;
+}
+
+.status.ok {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.status.error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.error-text {
+  color: #991b1b;
+  font-size: 12px;
+  margin-top: 4px;
+  white-space: pre-wrap;
+}
+
+.muted {
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.baseline-row {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 120px 1fr;
+}
+
+.option-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 10px 0 12px;
+}
+
+.summary span {
+  background: #eef2ff;
+  border: 1px solid #c7d2fe;
+  border-radius: 999px;
+  font-size: 13px;
+  padding: 4px 10px;
+}
+
+.controls {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 1fr minmax(220px, 300px) auto auto;
+  margin-bottom: 10px;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.filters button.active {
+  background: #dbeafe;
+  border-color: #93c5fd;
+  color: #1d4ed8;
+}
+
+.table-wrap {
+  overflow: auto;
+}
+
+table {
+  border-collapse: collapse;
+  min-width: 820px;
+  width: 100%;
+}
+
+th,
+td {
+  border: 1px solid #e3e7ee;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+}
+
+thead th {
+  background: #f8fafc;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+}
+
+tbody tr {
+  cursor: pointer;
+}
+
+tbody tr:hover {
+  background: #f8fafc;
+}
+
+tbody tr.selected {
+  background: #eff6ff;
+}
+
+.badge {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 2px 8px;
+}
+
+.badge.match {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.badge.missing {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.badge.typeMismatch {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.badge.valueMismatch {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.badge.arrayOrderMismatch {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.missing-cell {
+  background: #fff7f7;
+  color: #b91c1c;
+  font-weight: 600;
+}
+
+.indicator {
+  color: #6b7280;
+  font-size: 11px;
+  margin-left: 6px;
+}
+
+.detail {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  margin-top: 12px;
+  padding: 10px;
+}
+
+.detail ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+@media (max-width: 900px) {
+  .controls {
+    grid-template-columns: 1fr;
+  }
+
+  .baseline-row {
+    grid-template-columns: 1fr;
+  }
+}

@@ -86,6 +86,23 @@ flutter run -d chrome          # Runs as web app
 flutter build web              # Production web build
 ```
 
+### YAML Compare Web UI (React)
+
+A standalone web UI is available for comparing multiple YAML files by key path:
+
+```bash
+cd aprilai/yaml-compare-web
+npm install
+npm run dev
+```
+
+Build for production:
+
+```bash
+npm run build
+npm run preview
+```
+
 ### LLM Configuration
 
 The app ships in **Demo Mode** (no API key needed). To enable a real LLM:
