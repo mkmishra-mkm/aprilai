@@ -43,3 +43,7 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+# Node/web tooling
+**/node_modules/
+/yaml-compare-web/dist/
