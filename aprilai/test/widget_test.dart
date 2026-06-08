@@ -8,8 +8,9 @@ void main() {
     await tester.pumpWidget(
       const ProviderScope(child: AprilAIApp()),
     );
-    await tester.pump();
-    // Just verify it renders without crashing
+    // Verify it renders without crashing
     expect(find.byType(ProviderScope), findsOneWidget);
+    // Drain all pending timers (splash delay + animation zero-duration timers)
+    await tester.pumpAndSettle(const Duration(seconds: 5));
   });
 }

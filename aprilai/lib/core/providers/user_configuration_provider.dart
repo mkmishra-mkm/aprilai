@@ -62,6 +62,17 @@ class UserConfigurationNotifier extends Notifier<UserConfiguration> {
     await _persist();
   }
 
+  Future<void> setGoogleCalendarConnected({
+    required bool connected,
+    String? email,
+  }) async {
+    state = state.copyWith(
+      googleCalendarConnected: connected,
+      googleAccountEmail: connected ? email : null,
+    );
+    await _persist();
+  }
+
   Future<void> resetConfiguration() async {
     state = const UserConfiguration();
     final prefs = await SharedPreferences.getInstance();

@@ -58,6 +58,8 @@ class UserConfiguration {
   final String preferredLlmProvider;
   final bool notificationsEnabled;
   final String? llmApiKey;
+  final bool googleCalendarConnected;
+  final String? googleAccountEmail;
 
   const UserConfiguration({
     this.userName,
@@ -66,6 +68,8 @@ class UserConfiguration {
     this.preferredLlmProvider = 'gemini',
     this.notificationsEnabled = true,
     this.llmApiKey,
+    this.googleCalendarConnected = false,
+    this.googleAccountEmail,
   });
 
   UserConfiguration copyWith({
@@ -75,6 +79,8 @@ class UserConfiguration {
     String? preferredLlmProvider,
     bool? notificationsEnabled,
     String? llmApiKey,
+    bool? googleCalendarConnected,
+    String? googleAccountEmail,
   }) {
     return UserConfiguration(
       userName: userName ?? this.userName,
@@ -83,6 +89,8 @@ class UserConfiguration {
       preferredLlmProvider: preferredLlmProvider ?? this.preferredLlmProvider,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       llmApiKey: llmApiKey ?? this.llmApiKey,
+      googleCalendarConnected: googleCalendarConnected ?? this.googleCalendarConnected,
+      googleAccountEmail: googleAccountEmail ?? this.googleAccountEmail,
     );
   }
 
@@ -93,6 +101,8 @@ class UserConfiguration {
         'preferredLlmProvider': preferredLlmProvider,
         'notificationsEnabled': notificationsEnabled,
         'llmApiKey': llmApiKey,
+        'googleCalendarConnected': googleCalendarConnected,
+        'googleAccountEmail': googleAccountEmail,
       };
 
   factory UserConfiguration.fromJson(Map<String, dynamic> json) {
@@ -100,10 +110,11 @@ class UserConfiguration {
       userName: json['userName'] as String?,
       role: UserRoleExtension.fromKey(json['role'] as String? ?? 'general'),
       onboardingComplete: json['onboardingComplete'] as bool? ?? false,
-      preferredLlmProvider:
-          json['preferredLlmProvider'] as String? ?? 'gemini',
+      preferredLlmProvider: json['preferredLlmProvider'] as String? ?? 'gemini',
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       llmApiKey: json['llmApiKey'] as String?,
+      googleCalendarConnected: json['googleCalendarConnected'] as bool? ?? false,
+      googleAccountEmail: json['googleAccountEmail'] as String?,
     );
   }
 
@@ -116,9 +127,18 @@ class UserConfiguration {
           role == other.role &&
           onboardingComplete == other.onboardingComplete &&
           preferredLlmProvider == other.preferredLlmProvider &&
-          notificationsEnabled == other.notificationsEnabled;
+          notificationsEnabled == other.notificationsEnabled &&
+          googleCalendarConnected == other.googleCalendarConnected &&
+          googleAccountEmail == other.googleAccountEmail;
 
   @override
-  int get hashCode =>
-      Object.hash(userName, role, onboardingComplete, preferredLlmProvider, notificationsEnabled);
+  int get hashCode => Object.hash(
+        userName,
+        role,
+        onboardingComplete,
+        preferredLlmProvider,
+        notificationsEnabled,
+        googleCalendarConnected,
+        googleAccountEmail,
+      );
 }

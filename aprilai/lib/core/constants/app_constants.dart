@@ -11,6 +11,8 @@ class AppConstants {
   static const String routeDashboard = '/dashboard';
   static const String routeSettings = '/settings';
   static const String routeAssistant = '/assistant';
+  static const String routeReminders = '/reminders';
+  static const String routeReminderNew = '/reminders/new';
 
   // LLM providers
   static const List<String> llmProviders = ['gemini', 'openai', 'anthropic', 'ollama'];
