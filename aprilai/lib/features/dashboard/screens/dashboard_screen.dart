@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/user_configuration.dart';
 import '../../../core/providers/user_configuration_provider.dart';
+import '../../reminders/screens/reminders_screen.dart';
 import '../widgets/executive/calendar_widget.dart';
 import '../widgets/executive/daily_briefing_widget.dart';
 import '../widgets/executive/priority_tasks_widget.dart';
@@ -128,6 +129,11 @@ class _ExecutiveDashboard extends ConsumerWidget {
                   label: Text('Calendar'),
                 ),
                 NavigationRailDestination(
+                  icon: Icon(Icons.alarm_outlined),
+                  selectedIcon: Icon(Icons.alarm),
+                  label: Text('Reminders'),
+                ),
+                NavigationRailDestination(
                   icon: Icon(Icons.task_alt_outlined),
                   selectedIcon: Icon(Icons.task_alt),
                   label: Text('Tasks'),
@@ -159,6 +165,11 @@ class _ExecutiveDashboard extends ConsumerWidget {
                   icon: Icon(Icons.calendar_month_outlined),
                   selectedIcon: Icon(Icons.calendar_month),
                   label: 'Calendar',
+                ),
+                NavigationDestination(
+                  icon: Icon(Icons.alarm_outlined),
+                  selectedIcon: Icon(Icons.alarm),
+                  label: 'Reminders',
                 ),
                 NavigationDestination(
                   icon: Icon(Icons.task_alt_outlined),
@@ -214,6 +225,8 @@ class _ExecutiveBody extends StatelessWidget {
           padding: EdgeInsets.all(16),
           child: CalendarWidget(),
         ),
+        // Reminders tab
+        const RemindersScreen(),
         // Tasks tab
         const SingleChildScrollView(
           padding: EdgeInsets.all(16),
@@ -459,6 +472,11 @@ class _GeneralDashboard extends ConsumerWidget {
                   label: 'Add a Reminder',
                   icon: Icons.alarm_add_rounded,
                   color: cs.primary,
+                  onTap: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => const RemindersScreen(),
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 SimpleTaskButton(
@@ -470,10 +488,12 @@ class _GeneralDashboard extends ConsumerWidget {
               ],
             ),
           ),
+          // Reminders
+          const RemindersScreen(),
           // Actions grid
-          SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
-            child: const BigActionGrid(),
+          const SingleChildScrollView(
+            padding: EdgeInsets.all(20),
+            child: BigActionGrid(),
           ),
           // Assistant
           const _AssistantPlaceholder(),
@@ -489,6 +509,11 @@ class _GeneralDashboard extends ConsumerWidget {
             icon: Icon(Icons.home_outlined),
             selectedIcon: Icon(Icons.home),
             label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.alarm_outlined),
+            selectedIcon: Icon(Icons.alarm),
+            label: 'Reminders',
           ),
           NavigationDestination(
             icon: Icon(Icons.grid_view_outlined),

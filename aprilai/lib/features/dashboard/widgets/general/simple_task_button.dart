@@ -1,5 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/constants/app_constants.dart';
+import '../../../reminders/screens/reminder_form_screen.dart';
 
 class SimpleTaskButton extends StatelessWidget {
   final String label;
@@ -125,12 +129,25 @@ class _BigActionCell extends StatelessWidget {
     required this.index,
   });
 
+  void _handleTap(BuildContext context) {
+    switch (label) {
+      case 'Add Reminder':
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const ReminderFormScreen()),
+        );
+      case 'Ask April AI':
+        context.push(AppConstants.routeAssistant);
+      default:
+        break;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tt = Theme.of(context).textTheme;
 
     return GestureDetector(
-      onTap: () {},
+      onTap: () => _handleTap(context),
       child: Container(
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.1),

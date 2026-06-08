@@ -7,6 +7,7 @@ import '../../features/dashboard/screens/dashboard_screen.dart';
 import '../../features/onboarding/screens/onboarding_screen.dart';
 import '../../features/onboarding/screens/role_selection_screen.dart';
 import '../../features/onboarding/screens/splash_screen.dart';
+import '../../features/reminders/screens/reminders_screen.dart';
 import '../../features/settings/screens/settings_screen.dart';
 import '../constants/app_constants.dart';
 import '../providers/user_configuration_provider.dart';
@@ -55,6 +56,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: AppConstants.routeAssistant,
         builder: (context, state) => const ChatScreen(),
+      ),
+      GoRoute(
+        path: AppConstants.routeReminders,
+        builder: (context, state) => const RemindersScreen(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

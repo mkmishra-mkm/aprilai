@@ -5,7 +5,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/user_configuration.dart';
+import '../../../core/providers/reminder_provider.dart';
 import '../../../core/providers/user_configuration_provider.dart';
+import '../../../core/services/google_calendar_service.dart';
 import '../../assistant/services/llm_service.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -18,6 +20,8 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   final _apiKeyController = TextEditingController();
   bool _apiKeyVisible = false;
+  bool _googleCalendarLoading = false;
+  final _googleCalendarService = GoogleCalendarService();
 
   @override
   void initState() {
@@ -72,9 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ? '●●●●●●●●●●●● (set)'
                   : 'Not configured — using demo mode',
               style: tt.bodySmall?.copyWith(
-                color: config.llmApiKey?.isNotEmpty == true
-                    ? Colors.green
-                    : cs.error,
+                color: config.llmApiKey?.isNotEmpty == true ? Colors.green : cs.error,
               ),
             ),
             trailing: TextButton(
@@ -83,9 +85,20 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ).animate().fadeIn(delay: 175.ms),
 
-          // Integrations section
-          _SectionHeader(label: 'Integrations'),
+          // Google Calendar
+          _SectionHeader(label: 'Google Calendar'),
+          _GoogleCalendarTile(
+            config: config,
+            isLoading: _googleCalendarLoading,
+            onConnect: _connectGoogleCalendar,
+            onDisconnect: _disconnectGoogleCalendar,
+          ).animate().fadeIn(delay: 200.ms),
+
+          // Other integrations
+          _SectionHeader(label: 'Other Integrations'),
           ...(AppConstants.roleIntegrations[config.role.name] ?? [])
+              .where((i) => i != 'Google Calendar')
+              .toList()
               .asMap()
               .entries
               .map(
@@ -96,7 +109,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onPressed: () {},
                     child: const Text('Connect'),
                   ),
-                ).animate().fadeIn(delay: Duration(milliseconds: 200 + e.key * 40)),
+                ).animate().fadeIn(delay: Duration(milliseconds: 220 + e.key * 40)),
               ),
 
           // Notifications section
@@ -114,8 +127,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           _SectionHeader(label: 'Account'),
           ListTile(
             leading: Icon(Icons.logout, color: cs.error),
-            title: Text('Reset & Re-onboard',
-                style: TextStyle(color: cs.error)),
+            title: Text('Reset & Re-onboard', style: TextStyle(color: cs.error)),
             subtitle: const Text('Clear all settings and start over'),
             onTap: () => _showResetDialog(context),
           ).animate().fadeIn(delay: 350.ms),
@@ -133,8 +145,53 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
   }
 
-  Future<void> _showApiKeyDialog(
-      BuildContext context, UserConfiguration config) async {
+  Future<void> _connectGoogleCalendar() async {
+    setState(() => _googleCalendarLoading = true);
+    try {
+      final email = await _googleCalendarService.signIn();
+      if (email != null && mounted) {
+        await ref.read(userConfigurationProvider.notifier).setGoogleCalendarConnected(
+              connected: true,
+              email: email,
+            );
+        await ref.read(reminderProvider.notifier).syncToGoogleCalendar();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Connected as $email. Reminders synced to Google Calendar.'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      } else if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Sign-in cancelled or failed. Make sure Google OAuth credentials are configured in your app.',
+            ),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _googleCalendarLoading = false);
+    }
+  }
+
+  Future<void> _disconnectGoogleCalendar() async {
+    await _googleCalendarService.signOut();
+    await ref.read(userConfigurationProvider.notifier).setGoogleCalendarConnected(connected: false);
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Disconnected from Google Calendar'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _showApiKeyDialog(BuildContext context, UserConfiguration config) async {
     final cs = Theme.of(context).colorScheme;
     await showDialog(
       context: context,
@@ -155,42 +212,35 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 obscureText: !_apiKeyVisible,
                 decoration: InputDecoration(
                   hintText: 'sk-… or AIza…',
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
                   suffixIcon: IconButton(
                     icon: Icon(
-                      _apiKeyVisible
-                          ? Icons.visibility_off_outlined
-                          : Icons.visibility_outlined,
+                      _apiKeyVisible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                     ),
-                    onPressed: () =>
-                        setState(() => _apiKeyVisible = !_apiKeyVisible),
+                    onPressed: () => setState(() => _apiKeyVisible = !_apiKeyVisible),
                   ),
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Your key is stored locally and never shared.',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(color: cs.outline),
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(color: cs.outline),
               ),
             ],
           ),
         ),
         actions: [
           TextButton(
-            onPressed: () => ctx.pop(),
+            onPressed: () => Navigator.pop(ctx),
             child: const Text('Cancel'),
           ),
           FilledButton(
             onPressed: () async {
-              await ref
-                  .read(userConfigurationProvider.notifier)
-                  .setLlmApiKey(_apiKeyController.text.trim());
-              if (ctx.mounted) ctx.pop();
+              final key = _apiKeyController.text.trim();
+              await ref.read(userConfigurationProvider.notifier).setLlmApiKey(key);
+              // Reset chat so it picks up the new key
+              ref.invalidate(chatProvider);
+              if (ctx.mounted) Navigator.pop(ctx);
             },
             child: const Text('Save'),
           ),
@@ -203,19 +253,21 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Reset April AI'),
+        title: const Text('Reset everything?'),
         content: const Text(
-          'This will clear all your settings, role selection, and chat history. You will need to go through onboarding again.',
+          'This will clear your name, role, API key, and all settings. '
+          'You will go through onboarding again.',
         ),
         actions: [
           TextButton(
-            onPressed: () => ctx.pop(false),
+            onPressed: () => Navigator.pop(ctx, false),
             child: const Text('Cancel'),
           ),
-          FilledButton(
-            style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.error),
-            onPressed: () => ctx.pop(true),
+          TextButton(
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Reset'),
           ),
         ],
@@ -223,12 +275,75 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     );
     if (confirmed == true && mounted) {
       await ref.read(userConfigurationProvider.notifier).resetConfiguration();
-      ref.read(chatProvider.notifier).clearHistory();
+      ref.invalidate(chatProvider);
       // ignore: use_build_context_synchronously
-      context.go(AppConstants.routeOnboarding);
+      if (mounted) context.go(AppConstants.routeSplash);
     }
   }
 }
+
+// ── Google Calendar tile ──────────────────────────────────────────────────────
+
+class _GoogleCalendarTile extends StatelessWidget {
+  final UserConfiguration config;
+  final bool isLoading;
+  final VoidCallback onConnect;
+  final VoidCallback onDisconnect;
+
+  const _GoogleCalendarTile({
+    required this.config,
+    required this.isLoading,
+    required this.onConnect,
+    required this.onDisconnect,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final tt = Theme.of(context).textTheme;
+    final connected = config.googleCalendarConnected;
+
+    return ListTile(
+      leading: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: connected
+              ? const Color(0xFF1A73E8).withValues(alpha: 0.12)
+              : cs.surfaceContainerHighest,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Icon(
+          Icons.calendar_month_outlined,
+          color: connected ? const Color(0xFF1A73E8) : cs.onSurfaceVariant,
+        ),
+      ),
+      title: const Text('Google Calendar'),
+      subtitle: Text(
+        connected
+            ? 'Connected as ${config.googleAccountEmail ?? "your account"}\nReminders sync automatically'
+            : 'Connect to sync reminders to Google Calendar',
+        style: tt.bodySmall?.copyWith(
+          color: connected ? Colors.green : cs.onSurfaceVariant,
+        ),
+      ),
+      isThreeLine: connected,
+      trailing: isLoading
+          ? const SizedBox(
+              width: 20,
+              height: 20,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : TextButton(
+              onPressed: connected ? onDisconnect : onConnect,
+              style: connected ? TextButton.styleFrom(foregroundColor: cs.error) : null,
+              child: Text(connected ? 'Disconnect' : 'Connect'),
+            ),
+    );
+  }
+}
+
+// ── Section header ────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   final String label;
@@ -245,12 +360,14 @@ class _SectionHeader extends StatelessWidget {
         style: tt.labelSmall?.copyWith(
           color: cs.primary,
           fontWeight: FontWeight.w700,
-          letterSpacing: 1.0,
+          letterSpacing: 1.2,
         ),
       ),
     );
   }
 }
+
+// ── Profile tile ──────────────────────────────────────────────────────────────
 
 class _ProfileTile extends StatelessWidget {
   final UserConfiguration config;
@@ -260,7 +377,7 @@ class _ProfileTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
-    final name = config.userName ?? 'User';
+    final name = config.userName ?? 'Unknown User';
     final initials = name.trim().split(' ').take(2).map((s) => s[0]).join().toUpperCase();
 
     return ListTile(
@@ -269,21 +386,19 @@ class _ProfileTile extends StatelessWidget {
         backgroundColor: cs.primaryContainer,
         child: Text(
           initials,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-            color: cs.primary,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w700, color: cs.primary),
         ),
       ),
       title: Text(name, style: tt.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
       subtitle: Text(
         config.role.displayName,
-        style: tt.bodySmall?.copyWith(color: cs.outline),
+        style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
       ),
     );
   }
 }
+
+// ── Role picker ───────────────────────────────────────────────────────────────
 
 class _RolePicker extends StatelessWidget {
   final UserRole currentRole;
@@ -299,56 +414,33 @@ class _RolePicker extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Current Role',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            children: UserRole.values.map((role) {
-              final selected = role == currentRole;
-              return Expanded(
-                child: Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: GestureDetector(
-                    onTap: () => onRoleSelected(role),
-                    child: AnimatedContainer(
-                      duration: const Duration(milliseconds: 200),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(
-                        color: selected ? cs.primaryContainer : cs.surfaceContainerLow,
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: selected ? cs.primary : cs.outlineVariant,
-                          width: selected ? 2 : 1,
-                        ),
-                      ),
-                      child: Column(
-                        children: [
-                          Text(role.emoji, style: const TextStyle(fontSize: 22)),
-                          const SizedBox(height: 4),
-                          Text(
-                            role.displayName,
-                            style: tt.labelSmall?.copyWith(
-                              fontWeight: FontWeight.w600,
-                              color: selected ? cs.primary : cs.onSurfaceVariant,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ],
+        children: UserRole.values.map((role) {
+          final selected = role == currentRole;
+          return Container(
+            margin: const EdgeInsets.only(bottom: 8),
+            decoration: BoxDecoration(
+              color: selected ? cs.primaryContainer : cs.surfaceContainerLowest,
+              borderRadius: BorderRadius.circular(12),
+              border: selected ? Border.all(color: cs.primary, width: 1.5) : null,
+            ),
+            child: ListTile(
+              leading: Text(role.emoji, style: const TextStyle(fontSize: 24)),
+              title: Text(
+                role.displayName,
+                style: tt.titleSmall?.copyWith(fontWeight: FontWeight.w600),
+              ),
+              subtitle: Text(role.description, style: tt.bodySmall),
+              trailing: selected ? Icon(Icons.check_circle, color: cs.primary) : null,
+              onTap: () => onRoleSelected(role),
+            ),
+          );
+        }).toList(),
       ),
     );
   }
 }
+
+// ── LLM provider picker ───────────────────────────────────────────────────────
 
 class _LlmProviderPicker extends StatelessWidget {
   final String currentProvider;
@@ -369,17 +461,13 @@ class _LlmProviderPicker extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'AI Provider',
-            style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant),
-          ),
+          Text('AI Provider', style: tt.bodySmall?.copyWith(color: cs.onSurfaceVariant)),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             value: currentProvider,
             decoration: InputDecoration(
               border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-              contentPadding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             ),
             items: AppConstants.llmProviders
                 .map((p) => DropdownMenuItem(
@@ -394,4 +482,3 @@ class _LlmProviderPicker extends StatelessWidget {
     );
   }
 }
-
