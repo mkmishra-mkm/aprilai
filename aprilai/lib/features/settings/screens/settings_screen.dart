@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/constants/app_constants.dart';
 import '../../../core/models/user_configuration.dart';
@@ -89,14 +90,56 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               .asMap()
               .entries
               .map(
-                (e) => ListTile(
-                  leading: const Icon(Icons.link_outlined),
-                  title: Text(e.value),
-                  trailing: TextButton(
-                    onPressed: () {},
-                    child: const Text('Connect'),
-                  ),
-                ).animate().fadeIn(delay: Duration(milliseconds: 200 + e.key * 40)),
+                (e) => e.value == 'WhatsApp'
+                    ? ListTile(
+                        leading: const Icon(Icons.chat_outlined),
+                        title: const Text('WhatsApp'),
+                        subtitle: Text(
+                          config.whatsappIntegrationEnabled
+                              ? 'Connected'
+                              : 'Connect to send reminders and updates',
+                          style: tt.bodySmall?.copyWith(
+                            color: config.whatsappIntegrationEnabled
+                                ? Colors.green
+                                : cs.onSurfaceVariant,
+                          ),
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            TextButton(
+                              onPressed: () => config.whatsappIntegrationEnabled
+                                  ? _launchWhatsApp()
+                                  : _setWhatsAppIntegration(true),
+                              child: Text(
+                                config.whatsappIntegrationEnabled
+                                    ? 'Open'
+                                    : 'Connect',
+                              ),
+                            ),
+                            if (config.whatsappIntegrationEnabled)
+                              IconButton(
+                                icon: const Icon(Icons.link_off_outlined),
+                                tooltip: 'Disconnect WhatsApp',
+                                onPressed: () => _setWhatsAppIntegration(false),
+                              ),
+                          ],
+                        ),
+                        onTap: () => config.whatsappIntegrationEnabled
+                            ? _launchWhatsApp()
+                            : _setWhatsAppIntegration(true),
+                        onLongPress: config.whatsappIntegrationEnabled
+                            ? () => _setWhatsAppIntegration(false)
+                            : null,
+                      ).animate().fadeIn(delay: Duration(milliseconds: 200 + e.key * 40))
+                    : ListTile(
+                        leading: const Icon(Icons.link_outlined),
+                        title: Text(e.value),
+                        trailing: TextButton(
+                          onPressed: () {},
+                          child: const Text('Connect'),
+                        ),
+                      ).animate().fadeIn(delay: Duration(milliseconds: 200 + e.key * 40)),
               ),
 
           // Notifications section
@@ -227,6 +270,29 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
       // ignore: use_build_context_synchronously
       context.go(AppConstants.routeOnboarding);
     }
+  }
+
+  Future<void> _setWhatsAppIntegration(bool enabled) async {
+    await ref.read(userConfigurationProvider.notifier).setWhatsAppIntegration(enabled);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          enabled
+              ? 'WhatsApp integration enabled'
+              : 'WhatsApp integration disabled',
+        ),
+      ),
+    );
+  }
+
+  Future<void> _launchWhatsApp() async {
+    final uri = Uri.parse('https://wa.me/');
+    final launched = await launchUrl(uri, mode: LaunchMode.externalApplication);
+    if (!mounted || launched) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Could not open WhatsApp.')),
+    );
   }
 }
 

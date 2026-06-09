@@ -25,7 +25,7 @@ class AppConstants {
   // Integrations per role
   static const Map<String, List<String>> roleIntegrations = {
     'executive': ['Outlook', 'Salesforce', 'LinkedIn', 'Slack', 'Google Calendar'],
-    'technical': ['GitHub', 'Jira', 'StackOverflow', 'VS Code', 'Docker'],
+    'technical': ['GitHub', 'Jira', 'StackOverflow', 'VS Code', 'Docker', 'WhatsApp'],
     'general': ['Google Photos', 'WhatsApp', 'Reminders', 'Maps', 'Weather'],
   };
 }
