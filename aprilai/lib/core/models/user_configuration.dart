@@ -58,6 +58,7 @@ class UserConfiguration {
   final String preferredLlmProvider;
   final bool notificationsEnabled;
   final String? llmApiKey;
+  final bool whatsappIntegrationEnabled;
 
   const UserConfiguration({
     this.userName,
@@ -66,6 +67,7 @@ class UserConfiguration {
     this.preferredLlmProvider = 'gemini',
     this.notificationsEnabled = true,
     this.llmApiKey,
+    this.whatsappIntegrationEnabled = false,
   });
 
   UserConfiguration copyWith({
@@ -75,6 +77,7 @@ class UserConfiguration {
     String? preferredLlmProvider,
     bool? notificationsEnabled,
     String? llmApiKey,
+    bool? whatsappIntegrationEnabled,
   }) {
     return UserConfiguration(
       userName: userName ?? this.userName,
@@ -83,6 +86,8 @@ class UserConfiguration {
       preferredLlmProvider: preferredLlmProvider ?? this.preferredLlmProvider,
       notificationsEnabled: notificationsEnabled ?? this.notificationsEnabled,
       llmApiKey: llmApiKey ?? this.llmApiKey,
+      whatsappIntegrationEnabled:
+          whatsappIntegrationEnabled ?? this.whatsappIntegrationEnabled,
     );
   }
 
@@ -93,6 +98,7 @@ class UserConfiguration {
         'preferredLlmProvider': preferredLlmProvider,
         'notificationsEnabled': notificationsEnabled,
         'llmApiKey': llmApiKey,
+        'whatsappIntegrationEnabled': whatsappIntegrationEnabled,
       };
 
   factory UserConfiguration.fromJson(Map<String, dynamic> json) {
@@ -104,6 +110,8 @@ class UserConfiguration {
           json['preferredLlmProvider'] as String? ?? 'gemini',
       notificationsEnabled: json['notificationsEnabled'] as bool? ?? true,
       llmApiKey: json['llmApiKey'] as String?,
+      whatsappIntegrationEnabled:
+          json['whatsappIntegrationEnabled'] as bool? ?? false,
     );
   }
 
@@ -116,9 +124,17 @@ class UserConfiguration {
           role == other.role &&
           onboardingComplete == other.onboardingComplete &&
           preferredLlmProvider == other.preferredLlmProvider &&
-          notificationsEnabled == other.notificationsEnabled;
+          notificationsEnabled == other.notificationsEnabled &&
+          whatsappIntegrationEnabled == other.whatsappIntegrationEnabled;
 
   @override
   int get hashCode =>
-      Object.hash(userName, role, onboardingComplete, preferredLlmProvider, notificationsEnabled);
+      Object.hash(
+        userName,
+        role,
+        onboardingComplete,
+        preferredLlmProvider,
+        notificationsEnabled,
+        whatsappIntegrationEnabled,
+      );
 }

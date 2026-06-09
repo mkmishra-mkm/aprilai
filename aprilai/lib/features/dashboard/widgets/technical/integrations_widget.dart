@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../../core/providers/user_configuration_provider.dart';
 
 class _Integration {
   final String name;
@@ -17,44 +20,55 @@ class _Integration {
   });
 }
 
-class IntegrationsWidget extends StatelessWidget {
+class IntegrationsWidget extends ConsumerWidget {
   const IntegrationsWidget({super.key});
 
-  static const _integrations = [
-    _Integration(
-      name: 'GitHub',
-      status: 'Connected',
-      statusColor: Color(0xFF3FB950),
-      icon: Icons.code_rounded,
-      metric: '3 PRs open',
-    ),
-    _Integration(
-      name: 'Jira',
-      status: 'Connected',
-      statusColor: Color(0xFF3FB950),
-      icon: Icons.track_changes,
-      metric: '7 tickets',
-    ),
-    _Integration(
-      name: 'StackOverflow',
-      status: 'Syncing',
-      statusColor: Color(0xFFD29922),
-      icon: Icons.help_outline,
-      metric: '12 saved',
-    ),
-    _Integration(
-      name: 'Docker Hub',
-      status: 'Connected',
-      statusColor: Color(0xFF3FB950),
-      icon: Icons.storage_outlined,
-      metric: '4 images',
-    ),
-  ];
-
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final cs = Theme.of(context).colorScheme;
     final tt = Theme.of(context).textTheme;
+    final config = ref.watch(userConfigurationProvider);
+    final integrations = [
+      const _Integration(
+        name: 'GitHub',
+        status: 'Connected',
+        statusColor: Color(0xFF3FB950),
+        icon: Icons.code_rounded,
+        metric: '3 PRs open',
+      ),
+      const _Integration(
+        name: 'Jira',
+        status: 'Connected',
+        statusColor: Color(0xFF3FB950),
+        icon: Icons.track_changes,
+        metric: '7 tickets',
+      ),
+      const _Integration(
+        name: 'StackOverflow',
+        status: 'Syncing',
+        statusColor: Color(0xFFD29922),
+        icon: Icons.help_outline,
+        metric: '12 saved',
+      ),
+      const _Integration(
+        name: 'Docker Hub',
+        status: 'Connected',
+        statusColor: Color(0xFF3FB950),
+        icon: Icons.storage_outlined,
+        metric: '4 images',
+      ),
+      _Integration(
+        name: 'WhatsApp',
+        status: config.whatsappIntegrationEnabled ? 'Connected' : 'Disconnected',
+        statusColor: config.whatsappIntegrationEnabled
+            ? const Color(0xFF3FB950)
+            : const Color(0xFF8B949E),
+        icon: Icons.chat_outlined,
+        metric: config.whatsappIntegrationEnabled
+            ? 'Reminders enabled'
+            : 'Not connected',
+      ),
+    ];
 
     return Card(
       child: Padding(
@@ -80,7 +94,7 @@ class IntegrationsWidget extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 8),
-            ..._integrations.asMap().entries.map(
+            ...integrations.asMap().entries.map(
                   (e) => _IntegrationRow(
                     integration: e.value,
                     index: e.key,

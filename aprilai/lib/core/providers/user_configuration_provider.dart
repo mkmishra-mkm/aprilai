@@ -62,6 +62,11 @@ class UserConfigurationNotifier extends Notifier<UserConfiguration> {
     await _persist();
   }
 
+  Future<void> setWhatsAppIntegration(bool enabled) async {
+    state = state.copyWith(whatsappIntegrationEnabled: enabled);
+    await _persist();
+  }
+
   Future<void> resetConfiguration() async {
     state = const UserConfiguration();
     final prefs = await SharedPreferences.getInstance();
